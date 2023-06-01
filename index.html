@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METADROB_StoreView</title>
+    <link rel="shortcut icon" href="assets/fav.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.min.css" />
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/three/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core/index.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js" integrity="sha512-3gJwYpMe3QewGELv8k/BX9vcqhryRdzRMxVfq6ngyWXwo03GFEzjsUm8Q7RZcHPHksttq7/GFoxjCVUjkjvPdw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin/index.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin/index.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/libs/draco/draco_decoder.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/renderers/CSS3DRenderer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/RGBELoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/environments/RoomEnvironment.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <button class="material-button " id="homeBtn">
+    <span class="material-icon"><i class="fa-solid fa-house"></i></span>
+  </button>
+
+    <div class="card" id="cardContainer">
+      <div class="section1">
+        <div class="buttonContainer"> 
+          <div class="toggle-button-cover">
+            <div class="button-cover">
+              <div class="button r" id="button-1">
+                <input type="checkbox" class="checkbox" id="toggleBtn"/>
+                <div class="knobs"></div>
+                <div class="layer"></div>
+              </div>
+            </div>
+          </div>
+  
+          <button class="material-button arBtn">
+            <span class="material-icon"><i class="fa-solid fa-mobile-screen-button"></i></span>
+            <span class="button-text">View in AR</span>
+          </button>
+
+         
+        </div>
+
+        <button class="material-button " id="closeBtn">
+          <span class="material-icon"><i class="fa-sharp fa-solid fa-xmark"></i></span>
+        </button>
+       
+
+        <!-- <button class="material-button">
+          <span class="material-icon"><i class="fas fa-heart"></i></span>
+          <span class="button-text">Like</span>
+        </button> -->
+        <iframe src="https://ringshaderdemo.web.app/" class="iframe" frameborder="0"></iframe>
+        <model-viewer id="model-viewer"  src="assets/cameo_round.glb"  ar  touch-action="pan-y"></model-viewer>
+      </div>
+      <div class="section2">
+        <h2><span class="material-label">Naica</span></h2>
+        <p class="model-number material-label">Model No: <span style="color:#86118b ;">581964</span></p>
+        <p class="description material-label">Premium crystals for sparkling lights to complement to your home decor</p>
+        <div class="section3">
+          <label class="material-label blue">Specification</label>
+          <table>
+            <tr>
+              <td>Color</td>
+              <td>MMS titanium gold + Matt black</td>
+            </tr>
+            <tr>
+              <td>Material</td>
+              <td>Metal and Class A clear crystal</td>
+            </tr>
+            <tr>
+              <td>Dimentions(mm)</td>
+              <td>Dia 600 x H 310</td>
+            </tr>
+            <tr>
+              <td>Lamb Base</td>
+              <td>E14</td>
+            </tr>
+            <tr>
+              <td>Walt</td>
+              <td>7 x 40W</td>
+            </tr>
+            <tr>
+              <td>Lumen/ CCT</td>
+              <td>Non Integrate LED luminate</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      
+    </div>
+
+    <div id="panorama-container">
+        <div id="panorama-viewer"></div>
+    </div>
+    <script src="script.js"></script>
+    <!-- <script src="index.js"></script> -->
+</body>
+</html>
