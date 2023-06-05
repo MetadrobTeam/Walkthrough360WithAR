@@ -103,6 +103,7 @@
       panorama: imageUrl,
       loadingImg:"assets/loading.gif",
       navbar : false,
+      
       plugins: [
         [PhotoSphereViewer.MarkersPlugin, {
           markers: getMarkersForCurrentImage(lightIndex),
