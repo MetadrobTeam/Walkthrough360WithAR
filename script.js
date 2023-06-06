@@ -92,71 +92,84 @@
   let currentImageIndex = 0;
   let panoramaViewer = document.getElementById('panorama-viewer');
   let viewerInstance = null;
+  let isGyroEnabled = false;
   
-  function loadPanorama(imageUrl,lightIndex) {
-    if (viewerInstance !== null) {
-      viewerInstance.destroy();
-    }
+  function loadPanorama(imageUrl,lightIndex,currentRotation) {
+   if(viewerInstance == null)
+   {
   
-    viewerInstance = new PhotoSphereViewer.Viewer({
-      container: panoramaViewer,
-      panorama: imageUrl,
-      loadingImg:"assets/loading.gif",
-      navbar : false,
-      
-      plugins: [
-        [PhotoSphereViewer.MarkersPlugin, {
-          markers: getMarkersForCurrentImage(lightIndex),
-          // markerStyle: {
-          //   color: 'red',
-          //   hoverColor: 'blue'
-          // }
-        }]
-      ]
-    });
-
-
-    viewerInstance.addEventListener('click', ({ data }) => {
-        console.log(data.yaw,  data.pitch)
-        // if (!data.rightclick) {
-        //     markersPlugin.addMarker({
-        //         id: '#' + Math.random(),
-        //         position: { yaw: data.yaw, pitch: data.pitch },
-        //         image: "assets/markers/nav.gif",
-        //         size: { width: 32, height: 32 },
-        //         anchor: 'bottom center',
-        //         tooltip: 'Generated pin',
-        //         data: {
-        //             generated: true,
-        //         },
-        //     });
-        // }
-  });
-
-    const markersPlugin = viewerInstance.getPlugin(PhotoSphereViewer.MarkersPlugin);
-
-        markersPlugin.addEventListener('select-marker', ({ marker }) => {
+        viewerInstance = new PhotoSphereViewer.Viewer({
+          container: panoramaViewer,
+          panorama: imageUrl,
+          loadingImg:"assets/loading.gif",
+          navbar : false,
+          gyroscope: true,
           
-          if(!marker.data.isProduct && !marker.data.isLight)
-          {
-            currentImageIndex = marker.data.index;
-           showCurrentImage();
-          }
-          else if(marker.data.isProduct){
-            // currentImageIndex = panoramaImages.length-2;
-            
-            let lightIndex = panoramaImages.length-4;
-            if(marker.id == "product1") lightIndex = panoramaImages.length-2;
-            currentProductIndex = lightIndex;
-            let currentImage = panoramaImages[lightIndex].image;
-            showCurrentImage(currentImage,lightIndex);
-           
-          }
-          if(marker.data.isLight)
-          {
-             $("#cardContainer").show();
-          }
+          plugins: [
+            [PhotoSphereViewer.MarkersPlugin, {
+              markers: getMarkersForCurrentImage(lightIndex),
+              // markerStyle: {
+              //   color: 'red',
+              //   hoverColor: 'blue'
+              // }
+            },],
+            PhotoSphereViewer.GyroscopePlugin
+          ]
         });
+        if(currentRotation) viewerInstance.rotate(currentRotation)
+      
+        
+        viewerInstance.addEventListener('click', ({ data }) => {
+            console.log(data.yaw,  data.pitch)
+            // if (!data.rightclick) {
+            //     markersPlugin.addMarker({
+            //         id: '#' + Math.random(),
+            //         position: { yaw: data.yaw, pitch: data.pitch },
+            //         image: "assets/markers/nav.gif",
+            //         size: { width: 32, height: 32 },
+            //         anchor: 'bottom center',
+            //         tooltip: 'Generated pin',
+            //         data: {
+            //             generated: true,
+            //         },
+            //     });
+            // }
+      });
+
+        const markersPlugin = viewerInstance.getPlugin(PhotoSphereViewer.MarkersPlugin);
+
+            markersPlugin.addEventListener('select-marker', ({ marker }) => {
+              
+              if(!marker.data.isProduct && !marker.data.isLight)
+              {
+                currentImageIndex = marker.data.index;
+              showCurrentImage();
+              }
+              else if(marker.data.isProduct){
+                // currentImageIndex = panoramaImages.length-2;
+                
+                let lightIndex = panoramaImages.length-4;
+                if(marker.id == "product1") lightIndex = panoramaImages.length-2;
+                currentProductIndex = lightIndex;
+                let currentImage = panoramaImages[lightIndex].image;
+                showCurrentImage(currentImage,lightIndex);
+              
+              }
+              if(marker.data.isLight)
+              {
+                $("#cardContainer").show();
+              }
+            });
+      }
+
+      else
+      {
+        console.log(imageUrl);
+        viewerInstance.setPanorama(imageUrl)
+        .then(() => console.log("completed"));
+        const markersPlugin = viewerInstance.getPlugin(PhotoSphereViewer.MarkersPlugin);
+        markersPlugin.setMarkers(getMarkersForCurrentImage(lightIndex));
+      }
   }
   
   function getMarkersForCurrentImage(lightIndex) {
@@ -205,12 +218,12 @@
     });
   }
   
-  function showCurrentImage(image,lightIndex) {
+  function showCurrentImage(image,lightIndex,currentRotation) {
     let currentImage  = panoramaImages[currentImageIndex].image;
-    console.log(currentImage);
+    
     if(image) currentImage = image;
    
-    loadPanorama(currentImage,lightIndex);
+    loadPanorama(currentImage,lightIndex,currentRotation);
   }
 
   
@@ -225,9 +238,10 @@
   {
     let isChecked = $("#toggleBtn").prop("checked");
     let lightIndex = currentProductIndex;
+    var currentRotation = viewerInstance.getPosition();
     if(isChecked) lightIndex = currentProductIndex+1;
     let currentImage = panoramaImages[lightIndex].image;
-    showCurrentImage(currentImage,lightIndex);
+    showCurrentImage(currentImage,lightIndex, currentRotation);
   })
 
   $("#homeBtn").on("click",()=>
@@ -235,6 +249,32 @@
     currentImageIndex = 0;
     showCurrentImage();
     $("#cardContainer").hide();
+  })
+
+  $("#gyroBtn").on("click",()=>
+  {
+    let plugin = viewerInstance.getPlugin('gyroscope');
+    // alert(plugin.isSupported());
+    plugin.isSupported().then((result)=>
+    {
+      if (result) {
+        if(!isGyroEnabled) 
+        {
+          $("#gyroBtn").css("background-color","rgb(13, 206, 132)");
+          plugin.start();
+        }
+        else 
+        {
+          $("#gyroBtn").css("background-color","rgb(212, 64, 64)");
+          plugin.stop();
+        }
+        isGyroEnabled = !isGyroEnabled;
+        
+      } else {
+        console.log('Gyro not supported on this device.');
+      }
+    })
+    
   })
 
   $("#arBtn").on("click",()=>
