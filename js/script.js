@@ -11,7 +11,6 @@
   function loadPanorama(imageUrl,lightIndex,currentRotation) {
    if(viewerInstance == null)
    {
-  
         viewerInstance = new PhotoSphereViewer.Viewer({
           container: panoramaViewer,
           panorama: imageUrl,
@@ -58,6 +57,7 @@
                 }
                 if(marker.data.isLight)
                 {
+                  setModelByProductId(marker.id)
                   $("#cardContainer").show();
                 }
               });
@@ -187,9 +187,10 @@
       })
 
       // AR button click event 
-      $("#arBtn").on("click",()=>
+      $(".arBtn").on("click",()=>
       {
-        $("#model-viewer").click();
+        var modelViewer = document.getElementById('model-viewer');
+        modelViewer.activateAR();
       })
 
       $("#panorama-viewer").on("pointerdown",()=>

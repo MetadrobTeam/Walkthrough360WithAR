@@ -15,6 +15,20 @@ let point_92 = new Image();
 point_92.src = 'assets/9.02_Point_high.jpg';
 
 
+// product images
+let product1_off = new Image();
+product1_off.src = 'assets/product1_off_high.jpg';
+
+let product1_on = new Image();
+product1_on.src = 'assets/product1_on_high.jpg';
+
+let product2_off = new Image();
+product2_off.src = 'assets/product2_off_high.jpg';
+
+let product2_on = new Image();
+product2_on.src = 'assets/product2_on_high.jpg';
+
+
 let panoramaImages = [
 {
   image: point_6.src,
@@ -79,28 +93,28 @@ let panoramaImages = [
     ]
   },
   {
-    image: 'assets/lightoff_2k.png',
+    image: product1_off.src,
     markers: [
-      { id: 'product', yaw:    0.0121, pitch:  0.1898, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
+      { id: 'cameo_round', yaw:    0.0121, pitch:  0.1898, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
     ]
   },
   {
-    image: 'assets/lighton_2k.png',
+    image: product1_on.src,
     markers: [
-      { id: 'product', yaw:   6.2742, pitch: 0.1786, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
+      { id: 'cameo_round', yaw:   6.2742, pitch: 0.1786, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
     ]
   },
 
   {
-    image: 'assets/product2_off.png',
+    image: product2_off.src,
     markers: [
-      { id: 'product', yaw:  6.2831, pitch: 0.4837, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
+      { id: 'cameo_rect', yaw:  6.2831, pitch: 0.4837, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
     ]
   },
   {
-    image: 'assets/product2_on.png',
+    image: product2_on.src,
     markers: [
-      { id: 'product', yaw:   0.0035, pitch:0.4779, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
+      { id: 'cameo_rect', yaw:   0.0035, pitch:0.4779, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
     ]
   },
 ];
