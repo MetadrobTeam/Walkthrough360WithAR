@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://rawcdn.githack.com/AR-js-org/AR.js/3.3.1/aframe/build/aframe-ar-nft.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+  <a-scene embedded arjs="sourceType: webcam;">
+    <a-nft marker="assets/fav.png">
+      <a-entity id="model" gltf-model="assets/cameo_round.glb"></a-entity>
+    </a-nft>
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    AFRAME.registerComponent('ar-click-handler', {
+      init: function () {
+        this.el.addEventListener('click', this.onClick.bind(this));
+      },
+      onClick: function (event) {
+        // Perform hit-testing
+        const hitTest = document.querySelector('a-nft').components['hit-testing'].getHitTest(event.detail.position.x, event.detail.position.y);
+        if (hitTest.length > 0) {
+          const hitPoint = hitTest[0].point;
+          const hitNormal = hitTest[0].normal;
+
+          // Place the model at the hit point
+          const model = document.querySelector('#model');
+          model.setAttribute('position', hitPoint);
+          model.setAttribute('rotation', '0 ' + Math.atan2(hitNormal.x, hitNormal.z) * (180 / Math.PI) + ' 0');
+        }
+      }
+    });
+  </script>
+
+  <script>
+    // Register the AR click handler component
+    document.querySelector('a-scene').addEventListener('loaded', function () {
+      document.querySelector('a-nft').setAttribute('ar-click-handler', '');
+    });
+  </script>
+</body>
+</html>

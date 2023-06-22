@@ -16,6 +16,7 @@
           panorama: imageUrl,
           loadingImg:"assets/loading.gif",
           navbar : false,
+          defaultZoomLvl : 20,
           gyroscope: true,
           
           plugins: [

@@ -259,7 +259,8 @@ $(window).ready(()=>
                     modelScene.name="currentModel";
                     // scene.add( modelScene );
                     modelsList["cameo_rect"] = modelScene;
-                    let model = scene.getObjectByName("Chandeliear_Bulb5")
+                    let model = modelScene.getObjectByName("Chandeliear_Bulb5")
+                    // console.log(modelScene);
                     model.traverse(item=>
                         {
                             if(item.isMesh)
