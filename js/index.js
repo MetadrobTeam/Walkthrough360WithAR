@@ -5,13 +5,31 @@ const canvasElement = document.getElementById("viewerCanvas");
 
 let modelsList = {}
 
-let canvasWidth = 300; 
+let canvasWidth = 350; 
 let canvasHeight = 200; 
 console.log(document.getElementsByClassName("section1")[0].clientWidth)
 const ENTIRE_SCENE = 0, BLOOM_SCENE = 1;
 
 const bloomLayer = new THREE.Layers();
 bloomLayer.set( BLOOM_SCENE );
+
+
+const renderTarget = new THREE.WebGLRenderTarget(
+    window.offsetWidth,
+    window.offsetHeight,
+    {
+      type: THREE.HalfFloatType
+    }
+  );
+
+const guiOptions = {
+    refractionIndex: 1.5,
+    color: "#FFFFFF",
+    dispersion: 0.1,
+    roughness: 0.9,
+    animation: true,
+    geometry: "icosahedron"
+  };
 
 const params = {
     exposure: 0.98,
@@ -228,13 +246,17 @@ $(window).ready(()=>
                   // envMapIntensity: 15,
                   envMap : reflectionCube
                 } );
+
+            // console.log(document.getElementById('vertexshader'))
+
+          
              
-                glbLoader.load( 'assets/cameo_round.glb', function ( gltf ) {
+                glbLoader.load( 'assets/ball_light.glb', function ( gltf ) {
                     let modelScene = gltf.scene;
                     modelScene.scale.set(5,5,5);
                     modelScene.name="currentModel";
                     scene.add(modelScene)
-                    let model = scene.getObjectByName("Diamonds1")
+                    let model = scene.getObjectByName("Diamond1")
                     console.log(model)
                     // model.traverse(item=>
                     //     {
@@ -248,7 +270,7 @@ $(window).ready(()=>
                     model.material = whiteMaterial;
                     model.material.needsUpdate = true;
                     model.layers.enable( BLOOM_SCENE );
-                    modelsList["cameo_round"] = modelScene;
+                    modelsList["ball_light"] = modelScene;
                     
 
                 } );
@@ -267,12 +289,12 @@ $(window).ready(()=>
                             {
                                 item.material = whiteMaterial;
                                 item.material.needsUpdate = true;
-                                item.layers.enable( BLOOM_SCENE );
+                                // item.layers.enable( BLOOM_SCENE );
                             }
                         })
                     model.material = whiteMaterial;
                     model.material.needsUpdate = true;
-                    model.layers.enable( BLOOM_SCENE );
+                    // model.layers.enable( BLOOM_SCENE );
 
                 } );
 
@@ -306,10 +328,12 @@ $(window).ready(()=>
                   case 'Scene with Glow':
                   default:
                       // render scene with bloom
-                      renderBloom( true );
-
-                      // render the entire scene, then render bloom scene on top
-                      finalComposer.render();
+                      renderer.setRenderTarget(renderTarget);
+                        renderer.clear(true, true);
+                        // renderer.render(backScene, camera);
+                        renderer.setRenderTarget(null);
+                        renderer.clear(true, true);
+                        renderer.render(scene, camera);
                       break;
 
               }
@@ -360,6 +384,7 @@ $(window).ready(()=>
 
         function setModelByProductId(productID)
           {
+            console.log(productID);
             let currentModel = scene.getObjectByName("currentModel");
             if(currentModel) scene.remove(currentModel);
             scene.add(modelsList[productID]);

@@ -46,7 +46,7 @@
                 if(!marker.data.isProduct && !marker.data.isLight)
                 {
                   currentImageIndex = marker.data.index;
-                showCurrentImage();
+                  showCurrentImage();
                 }
                 else if(marker.data.isProduct){
                   let lightIndex = panoramaImages.length-4;
@@ -67,10 +67,12 @@
 
       else
       {
-        console.log(imageUrl);
+        if(markerInstance)markerInstance.clearMarkers()
         viewerInstance.setPanorama(imageUrl)
-        .then(() => console.log("completed"));
-        if(markerInstance) markerInstance.setMarkers(getMarkersForCurrentImage(lightIndex));
+        .then(() => {
+          if(markerInstance) markerInstance.setMarkers(getMarkersForCurrentImage(lightIndex));
+        });
+       
       }
   }
   
