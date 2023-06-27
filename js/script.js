@@ -30,6 +30,7 @@
             PhotoSphereViewer.GyroscopePlugin
           ]
         });
+        console.log("before update ", currentRotation)
         if(currentRotation) viewerInstance.rotate(currentRotation)
       
         
@@ -67,9 +68,11 @@
 
       else
       {
-        if(markerInstance)markerInstance.clearMarkers()
+        if(markerInstance)markerInstance.clearMarkers();
+        if(currentRotation) viewerInstance.rotate(currentRotation)
         viewerInstance.setPanorama(imageUrl)
         .then(() => {
+          
           if(markerInstance) markerInstance.setMarkers(getMarkersForCurrentImage(lightIndex));
         });
        
@@ -122,7 +125,8 @@
     });
   }
   
-  function showCurrentImage(image,lightIndex,currentRotation) {
+  function showCurrentImage(image,lightIndex,currentRotation = {pitch : 0,yaw : 0}) {
+   
     let currentImage  = panoramaImages[currentImageIndex].image;
     
     if(image) currentImage = image;
@@ -146,8 +150,17 @@
       {
         let isChecked = $("#toggleBtn").prop("checked");
         let lightIndex = currentProductIndex;
-        var currentRotation = viewerInstance.getPosition();
-        if(isChecked) lightIndex = currentProductIndex+1;
+        let currentRotation = viewerInstance.getPosition();
+        if(isChecked) 
+        {
+          lightIndex = currentProductIndex+1;
+          updateMaterial(true)
+
+        }
+        else{
+          updateMaterial(false)
+        }
+        
         let currentImage = panoramaImages[lightIndex].image;
         showCurrentImage(currentImage,lightIndex, currentRotation);
       })
@@ -158,6 +171,13 @@
         currentImageIndex = 0;
         showCurrentImage();
         $("#cardContainer").hide();
+        let isChecked = $("#toggleBtn").prop("checked");
+        if(isChecked) 
+        {
+          $("#toggleBtn").prop("checked",false);
+          updateMaterial(false);
+        }
+        resetControl();
       })
 
       // gyro buton click event 

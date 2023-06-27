@@ -8,6 +8,8 @@ let modelsList = {}
 let canvasWidth = 350; 
 let canvasHeight = 200; 
 
+let material = null,lightoffTexure,lightonTexure;
+let controls;
 const guiOptions = {
     refractionIndex: 1.93,
     color: "#FFFFFF",
@@ -25,6 +27,21 @@ const guiOptions = {
     strength : 0.35,
     radius : 0.54,
   };
+
+  const offGuiOptions = {
+    refractionIndex: 1.93,
+    dispersion: 0,
+    roughness:0.98,
+   
+    uRefractionRatio: 0.92,
+    uFresnelBias: 0.75,
+    uFresnelPower: 0.83,
+    uFresnelScale: 0.79,
+    uBackfaceVisibility: 0.22,
+    threshold : 0.3,
+    strength : 0.48,
+    radius : 0.67,
+  }
   
 
 const darkMaterial = new THREE.MeshBasicMaterial( { color: 'black' } );
@@ -37,16 +54,20 @@ renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 renderer.toneMapping = THREE.ReinhardToneMapping;
 
 const scene = new THREE.Scene();
+
+
+
 $(window).ready(()=>
 {
           const camera = new THREE.PerspectiveCamera( 40, canvasWidth / canvasHeight, 1, 200 );
           camera.position.set( 0, 0, 20 );
 
-          const controls = new THREE.OrbitControls( camera, renderer.domElement );
+          controls = new THREE.OrbitControls( camera, renderer.domElement );
           controls.maxPolarAngle = Math.PI * 1;
           controls.minDistance = 1;
           controls.maxDistance = 100;
           controls.addEventListener( 'change', render );
+          controls.saveState();
 
           scene.add( new THREE.AmbientLight( 0x404040 ) );
 
@@ -57,7 +78,110 @@ $(window).ready(()=>
               type: THREE.HalfFloatType
             }
           );
+
+           // material 
           
+
+          lightonTexure  = new THREE.CubeTextureLoader()
+          .setPath("./assets/cubemap5/")
+          .load(
+              ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
+              // (texture) => {
+              // material.uniforms.envMap.value = texture;
+              // }
+          );
+          lightonTexure.minFilter = THREE.LinearFilter;
+
+
+          lightoffTexure  = new THREE.CubeTextureLoader()
+          .setPath("./assets/cubemap2/")
+          .load(
+              ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
+              // (texture) => {
+              // material.uniforms.envMap.value = texture;
+              // }
+          );
+          lightoffTexure.minFilter = THREE.LinearFilter;
+
+          material = new THREE.ShaderMaterial({
+            uniforms: {
+              resolution: new THREE.Uniform(
+                new THREE.Vector2(canvasWidth, canvasHeight).multiplyScalar(
+                  window.devicePixelRatio
+                )
+              ),
+              backNormals: new THREE.Uniform(renderTarget.texture),
+              envMap: new THREE.Uniform(lightoffTexure),
+              refractionIndex: new THREE.Uniform(offGuiOptions.refractionIndex),
+              color: new THREE.Uniform(new THREE.Color(guiOptions.color)),
+              dispersion: new THREE.Uniform(offGuiOptions.dispersion),
+              roughness: new THREE.Uniform(offGuiOptions.roughness),
+            },
+            vertexShader: `
+            varying vec3 vWorldCameraDir;
+            varying vec3 vWorldNormal;
+            varying vec3 vViewNormal;
+          
+            void main() {
+              vec4 worldPosition = modelMatrix * vec4( position, 1.0);
+          
+              vWorldCameraDir = worldPosition.xyz - cameraPosition;
+              vWorldCameraDir = normalize(vec3(-vWorldCameraDir.x, vWorldCameraDir.yz));
+          
+              vWorldNormal = (modelMatrix * vec4(normal, 0.0)).xyz;
+              vWorldNormal = normalize(vec3(-vWorldNormal.x, vWorldNormal.yz));
+          
+                  vViewNormal = normalize( modelViewMatrix * vec4(normal, 0.0)).xyz;
+          
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }`,
+            fragmentShader: `
+            #define REF_WAVELENGTH 579.0
+            #define RED_WAVELENGTH 650.0
+            #define GREEN_WAVELENGTH 525.0
+            #define BLUE_WAVELENGTH 440.0
+          
+            uniform vec2 resolution;
+            uniform sampler2D backNormals;
+            uniform samplerCube envMap;
+            uniform float refractionIndex;
+            uniform vec3 color;
+            uniform float dispersion;
+            uniform float roughness;
+            varying vec3 vWorldCameraDir;
+            varying vec3 vWorldNormal;
+            varying vec3 vViewNormal;
+          
+            vec4 refractLight(float wavelength, vec3 backFaceNormal) {
+              float index = 1.0 / mix(refractionIndex, refractionIndex * REF_WAVELENGTH / wavelength, dispersion);
+              vec3 dir = vWorldCameraDir;
+              dir = refract(dir, vWorldNormal, index);
+              dir = refract(dir, backFaceNormal, index);
+              return textureCube(envMap, dir);
+            }
+          
+            vec3 fresnelSchlick(float cosTheta, vec3 F0)
+            {
+              return F0 + (1.0 - F0) * pow(1.0 + cosTheta, 5.0);
+            }
+          
+            void main() {
+              vec3 backFaceNormal = texture2D(backNormals, gl_FragCoord.xy / resolution).rgb;
+          
+              float r = refractLight(RED_WAVELENGTH, backFaceNormal).r;
+              float g = refractLight(GREEN_WAVELENGTH, backFaceNormal).g;
+              float b = refractLight(BLUE_WAVELENGTH, backFaceNormal).b;
+          
+              vec3 fresnel = fresnelSchlick(dot(vec3(0.0,0.0,-1.0), vViewNormal), vec3(0.04));
+              vec3 reflectedColor = textureCube(envMap, reflect(vWorldCameraDir, vWorldNormal)).rgb * saturate((1.0 - roughness) + fresnel);
+          
+              gl_FragColor.rgb = vec3(r,g,b) * color + reflectedColor;
+            }`
+          });
+
+          scene.background = lightonTexure;
+          scene.backgroundBlurriness = 0.4;
+                    
           let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(canvasWidth, canvasHeight), 1.5, 0.4, 0.85);
           bloomPass.threshold = guiOptions.threshold;
           bloomPass.strength = guiOptions.strength;
@@ -116,98 +240,6 @@ $(window).ready(()=>
           }
 
           function setupScene() {
-
-           
-            // material 
-            const material = new THREE.ShaderMaterial({
-                uniforms: {
-                  resolution: new THREE.Uniform(
-                    new THREE.Vector2(canvasWidth, canvasHeight).multiplyScalar(
-                      window.devicePixelRatio
-                    )
-                  ),
-                  backNormals: new THREE.Uniform(renderTarget.texture),
-                  envMap: new THREE.Uniform(THREE.CubeTexture.DEFAULT_IMAGE),
-                  refractionIndex: new THREE.Uniform(guiOptions.refractionIndex),
-                  color: new THREE.Uniform(new THREE.Color(guiOptions.color)),
-                  dispersion: new THREE.Uniform(guiOptions.dispersion),
-                  roughness: new THREE.Uniform(guiOptions.roughness)
-                },
-                vertexShader: `
-                varying vec3 vWorldCameraDir;
-                varying vec3 vWorldNormal;
-                varying vec3 vViewNormal;
-              
-                void main() {
-                  vec4 worldPosition = modelMatrix * vec4( position, 1.0);
-              
-                  vWorldCameraDir = worldPosition.xyz - cameraPosition;
-                  vWorldCameraDir = normalize(vec3(-vWorldCameraDir.x, vWorldCameraDir.yz));
-              
-                  vWorldNormal = (modelMatrix * vec4(normal, 0.0)).xyz;
-                  vWorldNormal = normalize(vec3(-vWorldNormal.x, vWorldNormal.yz));
-              
-                      vViewNormal = normalize( modelViewMatrix * vec4(normal, 0.0)).xyz;
-              
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }`,
-                fragmentShader: `
-                #define REF_WAVELENGTH 579.0
-                #define RED_WAVELENGTH 650.0
-                #define GREEN_WAVELENGTH 525.0
-                #define BLUE_WAVELENGTH 440.0
-              
-                uniform vec2 resolution;
-                uniform sampler2D backNormals;
-                uniform samplerCube envMap;
-                uniform float refractionIndex;
-                uniform vec3 color;
-                uniform float dispersion;
-                uniform float roughness;
-                varying vec3 vWorldCameraDir;
-                varying vec3 vWorldNormal;
-                varying vec3 vViewNormal;
-              
-                vec4 refractLight(float wavelength, vec3 backFaceNormal) {
-                  float index = 1.0 / mix(refractionIndex, refractionIndex * REF_WAVELENGTH / wavelength, dispersion);
-                  vec3 dir = vWorldCameraDir;
-                  dir = refract(dir, vWorldNormal, index);
-                  dir = refract(dir, backFaceNormal, index);
-                  return textureCube(envMap, dir);
-                }
-              
-                vec3 fresnelSchlick(float cosTheta, vec3 F0)
-                {
-                  return F0 + (1.0 - F0) * pow(1.0 + cosTheta, 5.0);
-                }
-              
-                void main() {
-                  vec3 backFaceNormal = texture2D(backNormals, gl_FragCoord.xy / resolution).rgb;
-              
-                  float r = refractLight(RED_WAVELENGTH, backFaceNormal).r;
-                  float g = refractLight(GREEN_WAVELENGTH, backFaceNormal).g;
-                  float b = refractLight(BLUE_WAVELENGTH, backFaceNormal).b;
-              
-                  vec3 fresnel = fresnelSchlick(dot(vec3(0.0,0.0,-1.0), vViewNormal), vec3(0.04));
-                  vec3 reflectedColor = textureCube(envMap, reflect(vWorldCameraDir, vWorldNormal)).rgb * saturate((1.0 - roughness) + fresnel);
-              
-                  gl_FragColor.rgb = vec3(r,g,b) * color + reflectedColor;
-                }`
-              });
-
-              let texture  = new THREE.CubeTextureLoader()
-              .setPath("./assets/cubemap5/")
-              .load(
-                  ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
-                  (texture) => {
-                  material.uniforms.envMap.value = texture;
-                  }
-              );
-
-              texture.minFilter = THREE.LinearFilter;
-
-              scene.background = texture;
-
             glbLoader.load( 'assets/ball_light.glb', function ( gltf ) {
                 let modelScene = gltf.scene;
                 modelScene.scale.set(20,20,20);
@@ -251,6 +283,26 @@ $(window).ready(()=>
 
         });
 
+
+        function updateMaterial(state)
+        {
+          if(state)
+          {
+            material.uniforms.refractionIndex.value = guiOptions.refractionIndex;
+            material.uniforms.dispersion.value = guiOptions.dispersion;
+            material.uniforms.roughness.value = guiOptions.roughness;
+            material.uniforms.envMap.value = lightonTexure;
+            
+          }
+
+          else{
+            material.uniforms.refractionIndex.value = offGuiOptions.refractionIndex;
+            material.uniforms.dispersion.value = offGuiOptions.dispersion;
+            material.uniforms.roughness.value = offGuiOptions.roughness;
+            material.uniforms.envMap.value = lightoffTexure;
+          }
+        }
+
         function setModelByProductId(productID)
           {
             console.log(productID);
@@ -260,4 +312,9 @@ $(window).ready(()=>
 
             let arPath = "assets/"+productID+".glb";
             $("#model-viewer").attr('src',arPath)
+          }
+
+          function resetControl()
+          {
+            controls.reset();
           }
