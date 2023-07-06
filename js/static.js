@@ -1,32 +1,32 @@
 
 let point_6 = new Image();
-point_6.src = 'assets/6_Point_high.jpg';
+point_6.src = 'assets/6_Point.jpg';
 
 let point_7 = new Image();
-point_7.src = 'assets/7_Point_high.jpg';
+point_7.src = 'assets/7_Point.jpg';
 
 let point_8 = new Image();
-point_8.src = 'assets/8_Point_high.jpg';
+point_8.src = 'assets/8_Point.jpg';
 
 let point_91 = new Image();
-point_91.src = 'assets/9.01_Point_high.jpg';
+point_91.src = 'assets/9.01_Point.jpg';
 
 let point_92 = new Image();
-point_92.src = 'assets/9.02_Point_high.jpg';
+point_92.src = 'assets/9.02_Point.jpg';
 
 
-// product images
-let product1_off = new Image();
-product1_off.src = 'assets/product1_off_high.jpg';
+// // product images
+// let product1_off = new Image();
+// product1_off.src = 'assets/product1_off_high.jpg';
 
-let product1_on = new Image();
-product1_on.src = 'assets/product1_on_high.jpg';
+// let product1_on = new Image();
+// product1_on.src = 'assets/product1_on_high.jpg';
 
-let product2_off = new Image();
-product2_off.src = 'assets/product2_off_high.jpg';
+// let product2_off = new Image();
+// product2_off.src = 'assets/product2_off_high.jpg';
 
-let product2_on = new Image();
-product2_on.src = 'assets/product2_on_high.jpg';
+// let product2_on = new Image();
+// product2_on.src = 'assets/product2_on_high.jpg';
 
 
 
@@ -93,29 +93,29 @@ let panoramaImages = [
 
     ]
   },
-  {
-    image: product1_off.src,
-    markers: [
-      { id: 'ball_light', yaw:0.0588, pitch:0.2414, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
-    ]
-  },
-  {
-    image: product1_on.src,
-    markers: [
-      // { id: 'ball_light',yaw:0.0588, pitch:0.2414, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
-    ]
-  },
+  // {
+  //   image: product1_off.src,
+  //   markers: [
+  //     { id: 'model_on_off', yaw:0.0588, pitch:0.2414, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
+  //   ]
+  // },
+  // {
+  //   image: product1_on.src,
+  //   markers: [
+  //     // { id: 'ball_light',yaw:0.0588, pitch:0.2414, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
+  //   ]
+  // },
 
-  {
-    image: product2_off.src,
-    markers: [
-      { id: 'cameo_rect', yaw:  6.2831, pitch: 0.4837, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
-    ]
-  },
-  {
-    image: product2_on.src,
-    markers: [
-      // { id: 'cameo_rect', yaw:   0.0035, pitch:0.4779, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
-    ]
-  },
+  // {
+  //   image: product2_off.src,
+  //   markers: [
+  //     { id: 'cameo_rect', yaw:  6.2831, pitch: 0.4837, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
+  //   ]
+  // },
+  // {
+  //   image: product2_on.src,
+  //   markers: [
+  //     // { id: 'cameo_rect', yaw:   0.0035, pitch:0.4779, tooltip: 'Click here for description about cameo' , index : null ,isProduct : false,isLight:true},
+  //   ]
+  // },
 ];

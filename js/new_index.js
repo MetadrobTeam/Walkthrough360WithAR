@@ -4,9 +4,16 @@ let glbLoader = new THREE.GLTFLoader().setDRACOLoader( new THREE.DRACOLoader().s
 const canvasElement = document.getElementById("viewerCanvas");
 
 let modelsList = {}
+let materialList = {};
+let deviceObjectMat = [];
 
-let canvasWidth = 350; 
-let canvasHeight = 200; 
+let roomScene = undefined;
+
+let roomMaterialList = {}
+let roomObjectMat = [];
+
+let canvasWidth = window.innerWidth; 
+let canvasHeight =  window.innerHeight; 
 
 let material = null,lightoffTexure,lightonTexure;
 let controls;
@@ -23,9 +30,9 @@ const guiOptions = {
     uFresnelPower: 0.83,
     uFresnelScale: 0.79,
     uBackfaceVisibility: 0.22,
-    threshold : 0.33,
-    strength : 0.35,
-    radius : 0.54,
+    threshold : 0,
+    strength : 0,
+    radius : 0,
   };
 
   const offGuiOptions = {
@@ -38,9 +45,10 @@ const guiOptions = {
     uFresnelPower: 0.83,
     uFresnelScale: 0.79,
     uBackfaceVisibility: 0.22,
-    threshold : 0.3,
-    strength : 0.48,
-    radius : 0.67,
+
+    threshold : 0,
+    strength : 0.9,
+    radius : 0,
   }
   
 
@@ -50,8 +58,10 @@ const materials = {};
 const renderer = new THREE.WebGLRenderer( { antialias: true , canvas : canvasElement} );
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( canvasWidth, canvasHeight );
-renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-renderer.toneMapping = THREE.ReinhardToneMapping;
+// renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+renderer.physicallyCorrectLights = true;
+renderer.outputEncoding = THREE.sRGBEncoding;
+// renderer.toneMapping = THREE.ReinhardToneMapping;
 
 const scene = new THREE.Scene();
 
@@ -59,14 +69,15 @@ const scene = new THREE.Scene();
 
 $(window).ready(()=>
 {
-          const camera = new THREE.PerspectiveCamera( 40, canvasWidth / canvasHeight, 1, 200 );
-          camera.position.set( 0, 0, 20 );
-
+          const camera = new THREE.PerspectiveCamera( 75, canvasWidth / canvasHeight, 0.1, 1000 );
+          camera.position.set(   10.80,4.3,4 );
           controls = new THREE.OrbitControls( camera, renderer.domElement );
-          controls.maxPolarAngle = Math.PI * 1;
+          controls.maxPolarAngle = Math.PI /2;
+          controls.minPolarAngle = 1;
           controls.minDistance = 1;
-          controls.maxDistance = 100;
+          controls.maxDistance = 10;
           controls.addEventListener( 'change', render );
+          controls.update();
           controls.saveState();
 
           scene.add( new THREE.AmbientLight( 0x404040 ) );
@@ -82,107 +93,21 @@ $(window).ready(()=>
            // material 
           
 
-          lightonTexure  = new THREE.CubeTextureLoader()
-          .setPath("./assets/cubemap5/")
-          .load(
-              ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
-              // (texture) => {
-              // material.uniforms.envMap.value = texture;
-              // }
-          );
-          lightonTexure.minFilter = THREE.LinearFilter;
+          // lightonTexure  = new THREE.CubeTextureLoader()
+          // .setPath("./assets/cubemap5/")
+          // .load(
+          //     ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
+          //     // (texture) => {
+          //     // material.uniforms.envMap.value = texture;
+          //     // }
+          // );
+          // lightonTexure.minFilter = THREE.LinearFilter;
 
 
-          lightoffTexure  = new THREE.CubeTextureLoader()
-          .setPath("./assets/cubemap2/")
-          .load(
-              ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
-              // (texture) => {
-              // material.uniforms.envMap.value = texture;
-              // }
-          );
-          lightoffTexure.minFilter = THREE.LinearFilter;
-
-          material = new THREE.ShaderMaterial({
-            uniforms: {
-              resolution: new THREE.Uniform(
-                new THREE.Vector2(canvasWidth, canvasHeight).multiplyScalar(
-                  window.devicePixelRatio
-                )
-              ),
-              backNormals: new THREE.Uniform(renderTarget.texture),
-              envMap: new THREE.Uniform(lightoffTexure),
-              refractionIndex: new THREE.Uniform(offGuiOptions.refractionIndex),
-              color: new THREE.Uniform(new THREE.Color(guiOptions.color)),
-              dispersion: new THREE.Uniform(offGuiOptions.dispersion),
-              roughness: new THREE.Uniform(offGuiOptions.roughness),
-            },
-            vertexShader: `
-            varying vec3 vWorldCameraDir;
-            varying vec3 vWorldNormal;
-            varying vec3 vViewNormal;
-          
-            void main() {
-              vec4 worldPosition = modelMatrix * vec4( position, 1.0);
-          
-              vWorldCameraDir = worldPosition.xyz - cameraPosition;
-              vWorldCameraDir = normalize(vec3(-vWorldCameraDir.x, vWorldCameraDir.yz));
-          
-              vWorldNormal = (modelMatrix * vec4(normal, 0.0)).xyz;
-              vWorldNormal = normalize(vec3(-vWorldNormal.x, vWorldNormal.yz));
-          
-                  vViewNormal = normalize( modelViewMatrix * vec4(normal, 0.0)).xyz;
-          
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }`,
-            fragmentShader: `
-            #define REF_WAVELENGTH 579.0
-            #define RED_WAVELENGTH 650.0
-            #define GREEN_WAVELENGTH 525.0
-            #define BLUE_WAVELENGTH 440.0
-          
-            uniform vec2 resolution;
-            uniform sampler2D backNormals;
-            uniform samplerCube envMap;
-            uniform float refractionIndex;
-            uniform vec3 color;
-            uniform float dispersion;
-            uniform float roughness;
-            varying vec3 vWorldCameraDir;
-            varying vec3 vWorldNormal;
-            varying vec3 vViewNormal;
-          
-            vec4 refractLight(float wavelength, vec3 backFaceNormal) {
-              float index = 1.0 / mix(refractionIndex, refractionIndex * REF_WAVELENGTH / wavelength, dispersion);
-              vec3 dir = vWorldCameraDir;
-              dir = refract(dir, vWorldNormal, index);
-              dir = refract(dir, backFaceNormal, index);
-              return textureCube(envMap, dir);
-            }
-          
-            vec3 fresnelSchlick(float cosTheta, vec3 F0)
-            {
-              return F0 + (1.0 - F0) * pow(1.0 + cosTheta, 5.0);
-            }
-          
-            void main() {
-              vec3 backFaceNormal = texture2D(backNormals, gl_FragCoord.xy / resolution).rgb;
-          
-              float r = refractLight(RED_WAVELENGTH, backFaceNormal).r;
-              float g = refractLight(GREEN_WAVELENGTH, backFaceNormal).g;
-              float b = refractLight(BLUE_WAVELENGTH, backFaceNormal).b;
-          
-              vec3 fresnel = fresnelSchlick(dot(vec3(0.0,0.0,-1.0), vViewNormal), vec3(0.04));
-              vec3 reflectedColor = textureCube(envMap, reflect(vWorldCameraDir, vWorldNormal)).rgb * saturate((1.0 - roughness) + fresnel);
-          
-              gl_FragColor.rgb = vec3(r,g,b) * color + reflectedColor;
-            }`
-          });
-
-          scene.background = lightonTexure;
-          scene.backgroundBlurriness = 0.4;
+          // scene.background = lightonTexure;
+          // scene.backgroundBlurriness = 0.4;
                     
-          let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(canvasWidth, canvasHeight), 1.5, 0.4, 0.85);
+          let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
           bloomPass.threshold = guiOptions.threshold;
           bloomPass.strength = guiOptions.strength;
           bloomPass.radius = guiOptions.radius;
@@ -194,7 +119,7 @@ $(window).ready(()=>
 
 
           setupScene();
-          loadLightFromHDRI("./assets/footprint_court_2k.hdr");
+          loadLightFromHDRI("./assets/christmas_photo_studio_07_1k.hdr");
           animate();
 
          
@@ -225,11 +150,11 @@ $(window).ready(()=>
               var envMap = pmremGenerator.fromEquirectangular(texture).texture;
 
               // scene.background = new THREE.Color("green");
-              //   scene.environment = envMap;
+                scene.environment = envMap;
 
-              // renderer.toneMappingExposure = 0.2;
-              // renderer.toneMapping = THREE.ACESFilmicToneMapping;
-              scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+              renderer.toneMappingExposure = 0.7;
+              renderer.toneMapping = THREE.LinearToneMapping ;
+              // scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
 
               texture.dispose();
               pmremGenerator.dispose();
@@ -240,45 +165,275 @@ $(window).ready(()=>
           }
 
           function setupScene() {
-            glbLoader.load( 'assets/ball_light.glb', function ( gltf ) {
+
+            glbLoader.load( 'assets/roomModel.glb', function ( gltf ) {
+              roomScene = gltf.scene.children[0];
+              roomScene.scale.set(5,5,5);
+              roomScene.position.y  = -5.5;
+              // console.log(roomScene);
+              scene.add(roomScene);
+              setRoomMaterial()
+              // console.log(modelScene);
+             
+             
+          } );
+
+
+            glbLoader.load( 'assets/model_on_off.glb', function ( gltf ) {
                 let modelScene = gltf.scene;
-                modelScene.scale.set(20,20,20);
-                modelScene.position.y  = -2.5;
+                modelScene.scale.set(7,7,7);
+                modelScene.position.y  = 4.2;
                 modelScene.name="currentModel";
-                scene.add(modelScene)
-                let model = scene.getObjectByName("Diamond1")
-                model.material = material;
-                model.material.needsUpdate = true;
-                modelsList["ball_light"] = modelScene;
+                scene.add(modelScene);
+                modelsList["model_on_off"] = modelScene;
+                setDeviceMaterial(modelScene)
+               
+                // end
+               
             } );
 
-            glbLoader.load( 'assets/cameo_rect.glb', function ( gltf ) {
-                let modelScene = gltf.scene;
-                modelScene.scale.set(8,8,8);
-                modelScene.name="currentModel";
-                modelsList["cameo_rect"] = modelScene;
-                let model = modelScene.getObjectByName("Chandeliear_Bulb5")
-                model.traverse(item=>
-                    {
-                        if(item.isMesh)
-                        {
-                            item.material = material;
-                            item.material.needsUpdate = true;
-                        }
-                    })
-                model.material = material;
-                model.material.needsUpdate = true;
-
-            } );
+           
           }
 
+          function setDeviceMaterial(deviceModel)
+          {
+            let model = deviceModel.children[0];
+              model.traverse(item=>
+                  {
+                      if(item.isMesh)
+                      {
+                          // console.log(item);
+                          switch(item.name)
+                          {
+                            case "bulb_glass":
+                              {
+                              let newTextureModel = deviceModel.getObjectByName("glass_mt_on");
+                              materialList["object"] = item;
+                              materialList[" defaultMaterial"] = item.material;
+                              materialList["onMaterial"] = newTextureModel.material;
+                              newTextureModel.visible = false;
+                               
+                              }
+                            break;
+
+                            case "Bulb_inside":
+                              {
+                                let newTextureModel = deviceModel.getObjectByName("bulb_inside_on");
+                                materialList["object"] = item;
+                                materialList[" defaultMaterial"] = item.material;
+                                materialList["onMaterial"] = newTextureModel.material;
+                                newTextureModel.visible = false;
+                                 
+                              }
+                            break;
+
+                            case "Bulb_steel":
+                              {
+                                let newTextureModel = deviceModel.getObjectByName("steel_mt_on");
+                                materialList["object"] = item;
+                                materialList[" defaultMaterial"] = item.material;
+                                materialList["onMaterial"] = newTextureModel.material;
+                                newTextureModel.visible = false;
+                                
+                              }
+                            break;
+
+                            case "Diamond_mt":
+                              {
+                                let newTextureModel = deviceModel.getObjectByName("diamond_on");
+                                materialList["object"] = item;
+                                materialList["defaultMaterial"] = item.material;
+                                materialList["onMaterial"] = newTextureModel.material;
+                                newTextureModel.visible = false;
+                                 
+                              }
+                                
+                            break;
+
+                            case "MidPart":
+                                {
+                                  let newTextureModel = deviceModel.getObjectByName("chrome_on");
+                                  materialList["object"] = item;
+                                  materialList["defaultMaterial"] = item.material;
+                                  materialList["onMaterial"] = newTextureModel.material;
+                                  newTextureModel.visible = false;
+                                   
+                                }
+                               
+                            break;
+
+                            case "Ring":
+                              {
+                                let newTextureModel = deviceModel.getObjectByName("silver_on");
+                                materialList["object"] = item;
+                                materialList["defaultMaterial"] = item.material;
+                                materialList["onMaterial"] = newTextureModel.material;
+                                newTextureModel.visible = false;
+                                 
+                              }
+                              break;
+                          }
+                          deviceObjectMat.push(materialList);
+                      }
+                  })
+          }
+
+
+          function setRoomMaterial()
+          {
+            
+            console.log(roomScene,"room model")
+            roomScene.children[0].visible = false;
+            roomScene.children[1].traverse(item => 
+              {
+                roomMaterialList = []
+                if(item.isMesh)
+                {
+                  switch(item.name)
+                  {
+                      case "Black_marble":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("black_marble_mt_sphere").material;
+                      break;
+                      case "black_plastic_txr_mt1":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("black_plastic_txr_mt_sphere").material;
+                      break;
+                      case "Black_reflective_plastic":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("black_reflective_plastic_mt_sphere").material;
+                      break;
+                      case "BlackWall_Matte":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("BlackWall_Matte_mt").material;
+                      break;
+                      case "books":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Book_MT").material;
+                      break;
+                      case "Carpet":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Carpet_mt").material;
+                      break;
+                      case "Copper":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("copper_mt").material;
+                      break;
+                      case "Dark_metal":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Dark_metal_mt").material;
+                      break;
+                  
+                      case "vray_Wood1":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("vray_Wood1_MT").material;
+                      break;
+                      case "white_wax":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("white_wax_mt").material;
+                      break;
+                      case "white_leather_wall":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Whitewall_leather_mt").material;
+                      break;
+                      case "Whitewall_matte":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Whitewall_matte_mt").material;
+                      break;
+                     
+                      case "Sofa_2":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Sofa_2_MT").material;
+                      break;
+                      case "ThinGlass":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("ThinGlass_MT").material;
+                      break;
+                      case "sofa_1":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("sofa_1_MT").material;
+                      break;
+                      case "Screen":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Screen_mt").material;
+                      break;
+                      case "pillow":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("pillow_MT").material;
+                      break;
+                      case "Lampe_Head":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Lamp_head_mt").material;
+                      break;
+                      case "Orange_matte":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Orange_matte_mt").material;
+                      break;
+                      case "metal":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Metal_mt").material;
+                      break;
+                      case "Gold":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Gold_mt").material;
+                      break;
+                      case "Glass":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Glass_mt").material;
+                      break;
+                      case "floor":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Floor_mt").material;
+                      break;
+                      case "Door_Wooden":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("Door_wooden_mt").material;
+                      break;
+                      case "Aluminum":
+                        roomMaterialList["object"] = item;
+                        roomMaterialList["defaultMaterial"] = item.material;
+                        roomMaterialList["onMaterial"] = roomScene.getObjectByName("aluminium_mt_sphere").material;
+                      break;
+
+                  }
+                  roomObjectMat.push(roomMaterialList)
+                }
+              });
+          }
+
+          
          
 
           function render() {
-            renderer.setRenderTarget(null);
-            renderer.clear(true, true);
+            // console.log(camera.position);
+            // renderer.setRenderTarget(null);
+            // renderer.clear(true, true);
             renderer.render(scene, camera);
-            if(composer) composer.render();
+            // if(composer) composer.render();
           }
 
         });
@@ -302,6 +457,26 @@ $(window).ready(()=>
             material.uniforms.envMap.value = lightoffTexure;
           }
         }
+
+        function roomLight(status)
+          {
+           roomObjectMat.map(item=>
+            {
+              if(status) item.object.material = item.onMaterial;
+              else item.object.material = item.defaultMaterial;
+              item.object.material.needsUpdate = true;
+              
+            })
+
+            deviceObjectMat.map(item=>
+              {
+                // console.log(item)
+                if(status) item.object.material = item.onMaterial;
+                else item.object.material = item.defaultMaterial;
+                item.object.material.needsUpdate = true;
+                
+              })
+          }
 
         function setModelByProductId(productID)
           {

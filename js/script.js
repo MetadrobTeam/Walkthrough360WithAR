@@ -50,16 +50,17 @@
                   showCurrentImage();
                 }
                 else if(marker.data.isProduct){
-                  let lightIndex = panoramaImages.length-4;
-                  if(marker.id == "product1") lightIndex = panoramaImages.length-2;
-                  currentProductIndex = lightIndex;
-                  let currentImage = panoramaImages[lightIndex].image;
-                  showCurrentImage(currentImage,lightIndex);
+                  // let lightIndex = panoramaImages.length-4;
+                  // if(marker.id == "product1") lightIndex = panoramaImages.length-2;
+                  // currentProductIndex = lightIndex;
+                  // let currentImage = panoramaImages[lightIndex].image;
+                  // showCurrentImage(currentImage,lightIndex);
+                  $(".viewerContainer").show();
+                  $("#cardContainer").show();
                 
                 }
                 if(marker.data.isLight)
                 {
-                  setModelByProductId(marker.id)
                   $("#cardContainer").show();
                 }
               });
@@ -138,6 +139,29 @@
   $(document).ready(function() {
 
       showCurrentImage();
+
+      let isMinimized = true;
+      const cardContainer = document.getElementById("cardContainer");
+      $("#minimizeBtn").on("click",()=>
+      {
+        if (isMinimized) {
+          cardContainer.classList.add("expanded");
+          $(".section2").show();
+          $("#minMaxIcon").addClass("fa-minimize")
+          $("#minMaxIcon").removeClass("fa-maximize")
+          
+          cardContainer.classList.remove("minimized");
+        } else {
+          cardContainer.classList.add("minimized");
+          $(".section2").hide();
+          $("#minMaxIcon").removeClass("fa-minimize")
+          $("#minMaxIcon").addClass("fa-maximize")
+          cardContainer.classList.remove("expanded");
+        }
+        isMinimized = !isMinimized;
+      })
+
+   
    
       // close button click event
       $("#closeBtn").on("click",()=>
@@ -146,39 +170,73 @@
       })
 
       //toggle button click event 
+      let isLightOff = true;
       $("#toggleBtn").on("change",(e)=>
       {
-        let isChecked = $("#toggleBtn").prop("checked");
-        let lightIndex = currentProductIndex;
-        let currentRotation = viewerInstance.getPosition();
-        if(isChecked) 
-        {
-          lightIndex = currentProductIndex+1;
-          updateMaterial(true)
+        // let isChecked = $("#toggleBtn").prop("checked");
+        // let lightIndex = currentProductIndex;
+        // let currentRotation = viewerInstance.getPosition();
+        // if(isChecked) 
+        // {
+        //   lightIndex = currentProductIndex+1;
+        //   updateMaterial(true)
 
-        }
-        else{
-          updateMaterial(false)
-        }
+        // }
+        // else{
+        //   updateMaterial(false)
+        // }
         
-        let currentImage = panoramaImages[lightIndex].image;
-        showCurrentImage(currentImage,lightIndex, currentRotation);
+        // let currentImage = panoramaImages[lightIndex].image;
+        // showCurrentImage(currentImage,lightIndex, currentRotation);
+
+        $(".viewerContainer").show();
+        if(isLightOff) 
+        {
+          roomLight(isLightOff);
+          $("#lightBtn").css("background-color","rgb(13, 206, 132)");
+        }
+        else 
+        {
+          roomLight(isLightOff)
+          $("#lightBtn").css("background-color","rgb(212, 64, 64)");
+        }
+        isLightOff = !isLightOff;
       })
 
       // home button click event
       $("#homeBtn").on("click",()=>
       {
-        currentImageIndex = 0;
-        showCurrentImage();
+        // currentImageIndex = 0;
+        // showCurrentImage();
+        // $("#cardContainer").hide();
+        // let isChecked = $("#toggleBtn").prop("checked");
+        // if(isChecked) 
+        // {
+        //   $("#toggleBtn").prop("checked",false);
+        //   updateMaterial(false);
+        // }
         $("#cardContainer").hide();
-        let isChecked = $("#toggleBtn").prop("checked");
-        if(isChecked) 
-        {
-          $("#toggleBtn").prop("checked",false);
-          updateMaterial(false);
-        }
+        $(".viewerContainer").hide();
         resetControl();
       })
+
+      // let isLightOff = true;
+      // $("#lightBtn").on("click",()=>
+      // {
+       
+      //   $(".viewerContainer").show();
+      //   if(isLightOff) 
+      //   {
+      //     roomLight(isLightOff);
+      //     $("#lightBtn").css("background-color","rgb(13, 206, 132)");
+      //   }
+      //   else 
+      //   {
+      //     roomLight(isLightOff)
+      //     $("#lightBtn").css("background-color","rgb(212, 64, 64)");
+      //   }
+      //   isLightOff = !isLightOff;
+      // })
 
       // gyro buton click event 
       $("#gyroBtn").on("click",()=>
@@ -225,7 +283,6 @@
       {
         if(gyroInstance) gyroInstance.start();
       })
-
-  });
+          });
   
   

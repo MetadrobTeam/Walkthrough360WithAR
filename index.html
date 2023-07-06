@@ -33,37 +33,12 @@
     <script src="https://cdn.jsdelivr.net/npm/three/examples/js/postprocessing/UnrealBloomPass.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three/examples/js/postprocessing/ShaderPass.js"></script>
 
-    <script type="x-shader/x-vertex" id="vertexshader">
-
-			varying vec2 vUv;
-
-			void main() {
-
-				vUv = uv;
-
-				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-
-			}
-
-		</script>
-
-		<script type="x-shader/x-fragment" id="fragmentshader">
-
-			uniform sampler2D baseTexture;
-			uniform sampler2D bloomTexture;
-
-			varying vec2 vUv;
-
-			void main() {
-
-				gl_FragColor = ( texture2D( baseTexture, vUv ) + vec4( 1.0 ) * texture2D( bloomTexture, vUv ) );
-
-			}
-
-		</script>
-
 </head>
 <body>
+
+  <div class="viewerContainer" style="display: none;">
+    <canvas class="iframe" id="viewerCanvas"></canvas>
+  </div>
 
   <button class="material-button " id="homeBtn">
     <span class="material-icon"><i class="fa-solid fa-house"></i></span>
@@ -73,76 +48,78 @@
     <span class="material-icon"><i class="fa fa-rotate"></i></span>
   </button>
 
-    <div class="card" id="cardContainer">
-      <div class="section1">
-        <div class="buttonContainer"> 
-          <div class="toggle-button-cover">
-            <div class="button-cover">
-              <div class="button r" id="button-1">
-                <input type="checkbox" class="checkbox" id="toggleBtn"/>
-                <div class="knobs"></div>
-                <div class="layer"></div>
-              </div>
+  <!-- <button class="material-button " id="lightBtn">
+    <span class="material-icon"><i class="fa fa-lightbulb"></i></span>
+  </button> -->
+
+  <div class="card minimized" id="cardContainer">
+    <!-- <button>X</button> -->
+    <div class="section1">
+      <div class="buttonContainer">
+        <div class="toggle-button-cover">
+          <div class="button-cover">
+            <div class="button r" id="button-1">
+              <input type="checkbox" class="checkbox" id="toggleBtn" />
+              <div class="knobs"></div>
+              <div class="layer"></div>
             </div>
           </div>
+        </div>
   
-          <button class="material-button arBtn">
-            <span class="material-icon"><i class="fa-solid fa-mobile-screen-button"></i></span>
-            <span class="button-text">View in AR</span>
-          </button>
-
-         
-        </div>
-
-        <button class="material-button " id="closeBtn">
-          <span class="material-icon"><i class="fa-sharp fa-solid fa-xmark"></i></span>
+        <button class="material-button arBtn">
+          <span class="material-icon"><i class="fa-solid fa-mobile-screen-button"></i></span>
+          <span class="button-text">View in AR</span>
         </button>
-       
+      </div>
+  
+      <!-- <button class="material-button" id="closeBtn">
+        <span class="material-icon"><i class="fa-sharp fa-solid fa-xmark"></i></span>
+      </button> -->
 
-        <!-- <button class="material-button">
-          <span class="material-icon"><i class="fas fa-heart"></i></span>
-          <span class="button-text">Like</span>
-        </button> -->
-        <!-- <iframe src="https://ringshaderdemo.web.app/" class="iframe" frameborder="0"></iframe> -->
-        <canvas class="iframe " id="viewerCanvas"></canvas>
-        <model-viewer id="model-viewer"  src="assets/cameo_round.glb"  style="display: block; z-index: -1;" ar  touch-action="pan-y"></model-viewer>
-      </div>
-      <div class="section2">
-        <h2><span class="material-label">Naica</span></h2>
-        <p class="model-number material-label">Model No: <span style="color:#86118b ;">581964</span></p>
-        <p class="description material-label">Premium crystals for sparkling lights to complement to your home decor</p>
-        <div class="section3">
-          <label class="material-label blue">Specification</label>
-          <table>
-            <tr>
-              <td>Color</td>
-              <td>MMS titanium gold + Matt black</td>
-            </tr>
-            <tr>
-              <td>Material</td>
-              <td>Metal and Class A clear crystal</td>
-            </tr>
-            <tr>
-              <td>Dimentions(mm)</td>
-              <td>Dia 600 x H 310</td>
-            </tr>
-            <tr>
-              <td>Lamb Base</td>
-              <td>E14</td>
-            </tr>
-            <tr>
-              <td>Walt</td>
-              <td>7 x 40W</td>
-            </tr>
-            <tr>
-              <td>Lumen/ CCT</td>
-              <td>Non Integrate LED luminate</td>
-            </tr>
-          </table>
-        </div>
-      </div>
-      
+      <button class="material-button" id="minimizeBtn">
+        
+        <span class="material-icon"><i id="minMaxIcon" class="fa-solid fa-maximize"></i></span>
+      </button>
+  
+     
+      <model-viewer id="model-viewer" src="assets/cameo_round.glb" style="display: block; z-index: -1;" ar touch-action="pan-y"></model-viewer>
     </div>
+    <div class="section2">
+      <h2><span class="material-label">Naica</span></h2>
+      <p class="model-number material-label">Model No: <span style="color:#86118b ;">581964</span></p>
+      <p class="description material-label">Premium crystals for sparkling lights to complement your home decor</p>
+      <div class="section3">
+        <label class="material-label blue">Specification</label>
+        <table>
+          <tr>
+            <td>Color</td>
+            <td>MMS titanium gold + Matt black</td>
+          </tr>
+          <tr>
+            <td>Material</td>
+            <td>Metal and Class A clear crystal</td>
+          </tr>
+          <tr>
+            <td>Dimensions(mm)</td>
+            <td>Dia 600 x H 310</td>
+          </tr>
+          <tr>
+            <td>Lamp Base</td>
+            <td>E14</td>
+          </tr>
+          <tr>
+            <td>Watt</td>
+            <td>7 x 40W</td>
+          </tr>
+          <tr>
+            <td>Lumen/ CCT</td>
+            <td>Non-Integrated LED illuminate</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  
 
     <div id="panorama-container">
         <div id="panorama-viewer"></div>
